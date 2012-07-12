@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<schema version="0.3">
+	<table name="btTomoacLister">
+		<field name="mID" type="I">
+			<key />
+			<autoincrement />
+		</field>
+		<field name="LcID" type="I" />
+		<field name="LbID" type="I" />
+		<field name="cID" type="I" />
+		<field name="FbID" type="I" />
+		<field name="msqID" type="I" />
+		<field name="position" type="I" />
+		<field name="EditFlag" type="I" />
+		<field name="regdateFlag" type="I" />
+		<field name="reguserFlag" type="I" />
+		<field name="pplines" type="I" />
+	</table>
+</schema>
