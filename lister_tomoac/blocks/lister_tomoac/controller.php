@@ -2,9 +2,11 @@
 defined('C5_EXECUTE') or die(_("Access Denied."));
 
 class ListerTomoacBlockController extends BlockController {
-//	public $btInterfaceWidth = "600";
-//	public $btInterfaceHeight = "500";
+	protected $btTable = 'btTomoacLister';
+	protected $btInterfaceWidth = "600";
+	protected $btInterfaceHeight = "500";
 	
+
 	public function getBlockTypeDescription() {
 		return t('Database Lister by tomoac');
 	}
@@ -37,7 +39,7 @@ class ListerTomoacBlockController extends BlockController {
 
 		$vid = 0;
 		$sql = "SELECT max(LbID) FROM btTomoacLister WHERE LcID=".$lcid;
-		//error_log($sql,0);
+		error_log($sql,0);
 		$rows = $db->query($sql);
 		$row = $rows->fetchrow();
  		foreach($row as $key=>$val) {
@@ -342,7 +344,10 @@ class ListerTomoacBlockController extends BlockController {
 					}
 				}
 			}
-			if($debug)  error_log('formcid='.$formcid,0);
+			if($debug) {
+				error_log('formcid='.$formcid,0);
+				error_log('msqidorder[0]='.$msqidorder[0],0);
+			}
 
 			if($_POST['function'] == 'view') {
 
@@ -427,13 +432,14 @@ class ListerTomoacBlockController extends BlockController {
 				// LIST up content 
 				$sql = "DROP VIEW IF EXISTS view_ans";
 				$rows = $db->query($sql);
-				$sql = "CREATE VIEW view_ans AS 
-					SELECT question,inputType,btFormTomoacQuestions.msqID,btFormTomoacAnswers.asID,answer,answerLong,created,uID 
-						FROM btFormTomoacQuestions 
-							INNER JOIN btFormTomoacAnswers ON btFormTomoacQuestions.msqID = btFormTomoacAnswers.msqID 
-							INNER JOIN btFormTomoacAnswerSet ON btFormTomoacAnswers.asID = btFormTomoacAnswerSet.asID 
-						WHERE bID=".$bid." 
-						ORDER BY btFormTomoacAnswers.asID,position ASC;";
+				$sql = "CREATE VIEW view_ans AS ".
+					"SELECT question,inputType,btFormTomoacQuestions.msqID,btFormTomoacAnswers.asID,answer,answerLong,created,uID ".
+						"FROM btFormTomoacQuestions ".
+							"INNER JOIN btFormTomoacAnswers ON btFormTomoacQuestions.msqID = btFormTomoacAnswers.msqID ".
+							"INNER JOIN btFormTomoacAnswerSet ON btFormTomoacAnswers.asID = btFormTomoacAnswerSet.asID ".
+						"WHERE bID=$bid ".
+						"ORDER BY btFormTomoacAnswers.asID,position ASC";
+				error_log($sql,0);
 				$rows = $db->query($sql);
 
 				// pickup msqID list and create view

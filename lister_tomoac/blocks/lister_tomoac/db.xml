@@ -5,6 +5,7 @@
 			<key />
 			<autoincrement />
 		</field>
+		<field name="bID" type="I" />
 		<field name="LcID" type="I" />
 		<field name="LbID" type="I" />
 		<field name="cID" type="I" />
