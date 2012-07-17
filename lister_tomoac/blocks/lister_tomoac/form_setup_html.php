@@ -9,6 +9,9 @@
 	$lcid = $c->getCollectionID();
 	$bid = $controller->bID;
 
+	error_log('lcID='.$lcid,0);
+	error_log('bID='.$bid,0);
+
 	$form = Loader::helper('form');
 
 	list(	$formbid, 

@@ -6,7 +6,7 @@ class ListerTomoacPackage extends Package {
 
      protected $pkgHandle = 'lister_tomoac';
      protected $appVersionRequired = '5.4.0';
-     protected $pkgVersion = '0.2.3';
+     protected $pkgVersion = '0.2.4';
 
      public function getPackageDescription() {
           return t('Database Lister by tomoac');

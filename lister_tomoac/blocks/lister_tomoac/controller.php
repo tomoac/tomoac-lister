@@ -29,21 +29,22 @@ class ListerTomoacBlockController extends BlockController {
 		$pplines = $data['pplines'.$fid];
 		$lcid = $data['LcID'];
 		$itemc = $data['tID_'.$fid];
-		$itmin = $data['iID_'.$fid];
-		$itmax = $data['xID_'.$fid];
-		if($itmin < 0)   $itmin = 0;
-		if($itmax > 100) $itmax = 100;
+		$itmin = $data['iID_'.$fid];	// minimum msqID
+		$itmax = $data['xID_'.$fid];	// maxmun msqID
+//		if($itmin < 0)   $itmin = 0;
+//		if($itmax > 100) $itmax = 100;
 		$lbid = intval($this->bID);
 
 		$vid = 0;
 		$sql = "SELECT max(LbID) FROM btTomoacLister WHERE LcID=".$lcid;
+		//error_log($sql,0);
 		$rows = $db->query($sql);
 		$row = $rows->fetchrow();
  		foreach($row as $key=>$val) {
  			$vid = $val + 1;
  			break;
  		}
-
+//		error_log('/itemc='.$itemc.'/itmin='.$itmin.'/itmax='.$itmax.'/',0);
 		for($i=$itmin; $i<=$itmax; $i++) {
 			if($data['bID_'.$fid.'_'.$i] == TRUE) {
 				$position = $data['bID_'.$fid.'_'.$i];
@@ -71,7 +72,7 @@ class ListerTomoacBlockController extends BlockController {
 			$db = Loader::db();
 
 			$sql = "SELECT * FROM btTomoacLister WHERE LcID=".$cid." AND LbID=".$bid;
-			//error_log($sql,0);
+//			error_log($sql,0);
 			$rows = $db->query($sql);
 			foreach($rows as $row) {
 				foreach($row as $key=>$val) {
@@ -127,6 +128,7 @@ class ListerTomoacBlockController extends BlockController {
 		// 有効なフォームをリストアップ
 		$db = Loader::db();
 		$sql = "SELECT msqID,question FROM btFormTomoacQuestions WHERE bID=".$bid." ORDER BY position,msqID";
+		//error_log($sql,0);
 		$rows = $db->Execute($sql);
 		return $rows;
 	}
@@ -165,7 +167,7 @@ class ListerTomoacBlockController extends BlockController {
 	function view() {
 
 		$debug = FALSE;	// no debug mode //
-//		$debug = TRUE;	// debug mode //
+		$debug = TRUE;	// debug mode //
 
 		$db = Loader::db();
 
@@ -184,9 +186,9 @@ class ListerTomoacBlockController extends BlockController {
 		$givenbid = $_POST['bID'];
 
 		if($debug) {
-//			error_log('(now) cID='.$nowcid,0);
-//			error_log('(now) bID='.$nowbid,0);
-//			error_log('(given) bID='.$givenbid,0);
+			error_log('(now) cID='.$nowcid,0);
+			error_log('(now) bID='.$nowbid,0);
+			error_log('(given) bID='.$givenbid,0);
 		}
 
 		// Delete
@@ -344,7 +346,7 @@ class ListerTomoacBlockController extends BlockController {
 
 			if($_POST['function'] == 'view') {
 
-	/*=====================Output Record Table (VIEW) ==============*/
+	/*=====================Output Record Table (VIEW: Single Record) ==============*/
 
 				$html = '';
 				$asid = $_POST['asID'];
@@ -450,6 +452,7 @@ class ListerTomoacBlockController extends BlockController {
 						$rows = $db->query($sql);
 					}
 				}
+				error_log('msqidar_count='.count($msqidar),0);
 				// make SQL view of total
 				for($i=0; $i<count($msqidar); $i++) {
 
@@ -460,25 +463,29 @@ class ListerTomoacBlockController extends BlockController {
 						$sql = "SELECT ";
 						$f = "view_ans".$m;
 					}
-					$sql .=   $r.".asID as asID".$m.",
-							".$r.".msqID as msqID".$m.",
-							".$r.".question as question".$m.",
-							".$r.".inputType as inputType".$m.",
-							".$r.".answer as answer".$m.",
-							".$r.".answerLong as answerLong".$m.",
-							".$r.".created as created".$m.",
-							".$r.".uID as uID".$m;
+					$sql .=   $r.".asID as asID".$m.
+							",".$r.".msqID as msqID".$m.
+							",".$r.".question as question".$m.
+							",".$r.".inputType as inputType".$m.
+							",".$r.".answer as answer".$m.
+							",".$r.".answerLong as answerLong".$m.
+							",".$r.".created as created".$m.
+							",".$r.".uID as uID".$m;
 
 					if($i == 0) {		// first
-						$sql .= ",";
 						$from = " FROM ".$r;
-					} else if($i == (count($msqidar)-1)) {	// last
+						if($i == (count($msqidar)-1))	// last?
+							$sql .= $from;
+						else
+							$sql .= ",";
+					} else if($i == (count($msqidar)-1)) {	// last?
 						$sql .= $from . " LEFT JOIN ".$r." ON ".$f.".asID=".$r.".asID";
 					} else {
 						$sql .= ",";
 						$from .= " LEFT JOIN ".$r." ON ".$f.".asID=".$r.".asID";
 					}
 				}
+//				error_log($sql,0);
 //				if($debug) $html .= $sql.'<br>';
 				$rows = $db->query($sql);
 
