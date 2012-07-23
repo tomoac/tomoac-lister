@@ -25,7 +25,7 @@ class ListerTomoacBlockController extends BlockController {
 		$fid = $data['fID'];
 		$cid = $this->get_cid_from_bid($fid);
 
-		$editflag = $data['editFlag'.$fid];
+		$editFlag = $data['editFlag'.$fid];
 		$regdateflag = $data['regdateFlag'.$fid];
 		$reguserflag = $data['reguserFlag'.$fid];
 		$pplines = $data['pplines'.$fid];
@@ -51,7 +51,7 @@ class ListerTomoacBlockController extends BlockController {
 			if($data['bID_'.$fid.'_'.$i] == TRUE) {
 				$position = $data['bID_'.$fid.'_'.$i];
 				$vals = array( 0, intval($fid), intval($i), intval($position), intval($cid), intval($lcid), intval($lbid), 
-								intval($editflag), intval($regdateflag), intval($reguserflag), intval($pplines) );
+								intval($editFlag), intval($regdateflag), intval($reguserflag), intval($pplines) );
 				$sql = "INSERT INTO btTomoacLister (mID, FbID, msqID, position, cID, LcID, LbID, 
 													editFlag, regdateFlag, reguserFlag, pplines ) 
 										values (?,?,?,?,?,?,?,?,?,?,?)";
@@ -84,7 +84,7 @@ class ListerTomoacBlockController extends BlockController {
 					} else if($key == 'cID')
 						$formcid = $val;
 					else if($key == 'editFlag')
-						$editflag = $val;
+						$editFlag = $val;
 					else if($key == 'regdateFlag')
 						$regdateflag = $val;
 					else if($key == 'reguserFlag')
@@ -98,7 +98,7 @@ class ListerTomoacBlockController extends BlockController {
 				}
 			}
 		}
-		return array( $setbid, $formcid, $editflag, $regdateflag, $reguserflag, $pplines, $msqidar );
+		return array( $setbid, $formcid, $editFlag, $regdateflag, $reguserflag, $pplines, $msqidar );
 	}
 	/*====================================================*
 	 ***			get_form_list (add & edit)			***
@@ -283,7 +283,7 @@ class ListerTomoacBlockController extends BlockController {
 					if($key == 'cID')
 						$formcid = $val;
 					if($key == 'editFlag')
-						$editflag = $val;
+						$editFlag = $val;
 					if($key == 'regdateFlag')
 						$regdateflag = $val;
 					if($key == 'reguserFlag')
@@ -435,7 +435,7 @@ class ListerTomoacBlockController extends BlockController {
 						ORDER BY position ASC;";
 				$rows = $db->query($sql);
 
-				$html .= '<form enctype="multipart/form-data" name="form'.$asid.'" method="post" action="/index.php?cID='.$formcid.'">';
+				$html .= $this->formopen_tag( $asid, $formcid, 0 );
 				$i = 0;
 				$j = count($itemar);
 				foreach($rows as $row) {
@@ -474,7 +474,7 @@ class ListerTomoacBlockController extends BlockController {
 				// ボタン表示
 //				$html .= '</tr>';
 				$html .= '<tr align="center">';
-				$html .= $this->button_tag($cid, $bid, $asid, $editflag, $_POST['surveyName'], 1, $debug);
+				$html .= $this->button_tag($cid, $bid, $asid, $editFlag, $_POST['surveyName'], 1, $debug);
 				$html .= '<td></td>';
 				$html .= '</tr>';
 			}
@@ -612,7 +612,7 @@ class ListerTomoacBlockController extends BlockController {
 					for($a=0; $a<count($msqidorder); $a++)
 						$html .= $htmlar[$a];
 					$html .= $html2; $html2 = '';
-					$html .= $this->button_tag($cid, $bid, $asid, $editflag, $_POST['surveyName'], 0, $debug);
+					$html .= $this->button_tag($cid, $bid, $asid, $editFlag, $_POST['surveyName'], 0, $debug);
 					$html .= '</tr>';
 
 					$dc++;
@@ -638,8 +638,9 @@ class ListerTomoacBlockController extends BlockController {
 //		error_log('/asID='.$asid.'/formcID='.$formcid.'/debug='.$debug,0);
 
 		$tc = Page::getByID($formcid);
-		$path = DIR_REL . $tc->getCollectionPath();		// 	/<name>
-//		$path = '/index.php?cID='.$formcid;		// 	/index.php?cID=xxx
+//		$path = DIR_REL . '/index.php?'.$tc->getCollectionPath();		// 	/<name>
+//		$path = DIR_REL . $tc->getCollectionPath();		// 	/<name>
+		$path = DIR_REL . '/index.php?cID='.$formcid;		// 	/index.php?cID=xxx
 
 		$html .= "\n";
 		$html .= '<form enctype="multipart/form-data" name="form'.$asid.'" method="post" action="'.$path.'">';
@@ -648,13 +649,13 @@ class ListerTomoacBlockController extends BlockController {
 	/*====================================================*
 	 ***                make button tag (2)				***
 	 *====================================================*/
-	function button_tag( $cid, $bid, $asid, $editflag, $surveyname, $bn, $debug=0 ) {
+	function button_tag( $cid, $bid, $asid, $editFlag, $surveyname, $bn, $debug=0 ) {
 //		error_log('/cID='.$cid.'/bID='.$bid.'/asID='.$asid.'/formcID='.$formcid.'/surneyName='.$surveyname.'/bn='.$bn.'/debug='.$debug,0);
 
 		$html .= '<td>';
 
 		// 編集ボタン
-		if($editflag != 0) {
+		if($editFlag != 0) {
 			$html .= '<input type="hidden" name="function" value="edit">';
 			$html .= '<input type="hidden" name="lister" value="'.$cid.'">';
 			$html .= '<input type="hidden" name="asID" value="'.$asid.'">';
@@ -676,7 +677,7 @@ class ListerTomoacBlockController extends BlockController {
 		$html .= '</td>';
 		$html .= '</form>';
 
-		if($editflag != 0) {
+		if($editFlag != 0) {
 			// 削除ボタン
 			$html .= "\n";
 			$html .= '<form name="form'.$asid.'del" method="post" action="">';
@@ -707,26 +708,23 @@ class ListerTomoacBlockController extends BlockController {
 		if($inputtype == 'jname') {
 			$valar = explode('&&', $vals);
 			$vals = $valar[0].' '.$valar[1].' ('.$valar[2].' '.$valar[3].')';
-			$html .= '<td>'.$vals;
+			$html .= '<td>'.$vals.'</td>';
 			$html .= '<input type="hidden" name="Question'.$msqid.'name1" value="'.$valar[0].'">';
 			$html .= '<input type="hidden" name="Question'.$msqid.'name2" value="'.$valar[1].'">';
 			$html .= '<input type="hidden" name="Question'.$msqid.'ruby1" value="'.$valar[2].'">';
 			$html .= '<input type="hidden" name="Question'.$msqid.'ruby2" value="'.$valar[3].'">';
-			$html .= '</td>';
 		}
 		else if($inputtype == 'postno') {
 			$valar = explode('&&', $vals);
-			$html .= '<td>'.'〒'.substr($vals,0,3).'-'.substr($vals,3,4).' '.$valar[1].' '.$valar[2].' '.$valar[3];
+			$html .= '<td>'.'〒'.substr($vals,0,3).'-'.substr($vals,3,4).' '.$valar[1].' '.$valar[2].' '.$valar[3].'</td>';
 			$html .= '<input type="hidden" name="Question'.$msqid.'" value="'.$valar[0].'">';
 			$html .= '<input type="hidden" name="Question'.$msqid.'a" value="'.$valar[1].'">';
 			$html .= '<input type="hidden" name="Question'.$msqid.'b" value="'.$valar[2].'">';
 			$html .= '<input type="hidden" name="Question'.$msqid.'c" value="'.$valar[3].'">';
-			$html .= '</td>';
 		}
 		else {
-			$html .= '<td>'.$vals;
+			$html .= '<td>'.$vals.'</td>';
 			$html .= '<input type="hidden" name="Question'.$msqid.'" value="'.$vals.'">';
-			$html .= '</td>';
 		}
 		return $html;
 	}
