@@ -39,7 +39,7 @@ class ListerTomoacBlockController extends BlockController {
 
 		$vid = 0;
 		$sql = "SELECT max(LbID) FROM btTomoacLister WHERE LcID=".$lcid;
-		error_log($sql,0);
+//		error_log($sql,0);
 		$rows = $db->query($sql);
 		$row = $rows->fetchrow();
  		foreach($row as $key=>$val) {
@@ -164,12 +164,84 @@ class ListerTomoacBlockController extends BlockController {
 	}
 
 	/*====================================================*
+	 ***              create view (view_ans)			***
+	 *====================================================*/
+	function create_view_ans( $bID ) {
+
+		$db = Loader::db();
+		// LIST up content 
+		$this->drop_view_ans();
+		$sql = "CREATE VIEW view_ans AS ".
+				"SELECT question,inputType,btFormTomoacQuestions.msqID,btFormTomoacAnswers.asID,answer,answerLong,created,uID ".
+					"FROM btFormTomoacQuestions ".
+						"INNER JOIN btFormTomoacAnswers ON btFormTomoacQuestions.msqID = btFormTomoacAnswers.msqID ".
+						"INNER JOIN btFormTomoacAnswerSet ON btFormTomoacAnswers.asID = btFormTomoacAnswerSet.asID ".
+					"WHERE bID=$bID ".
+					"ORDER BY btFormTomoacAnswers.asID,position ASC";
+		error_log($sql,0);
+		$rows = $db->query($sql);
+	}
+	/*====================================================*
+	 ***              	drop view (view_ans)			***
+	 *====================================================*/
+	function drop_view_ans() {
+
+		$db = Loader::db();
+		// LIST up content 
+		$sql = "DROP VIEW IF EXISTS view_ans";
+		$rows = $db->query($sql);
+	}
+	/*====================================================*
+	 ***    create_view_ans_msqID and get msqID list	***
+	 *====================================================*/
+	function create_view_ans_msqid() {
+
+		$db = Loader::db();
+		// pickup msqID list and create view
+		$sql = "SELECT DISTINCT msqID FROM view_ans";
+		$rows = $db->query($sql);
+		$msqidar = array();
+		foreach($rows as $row) {
+			foreach($row as $key=>$val) {
+				$msqidar[] = $val;	// msqID
+				$msqid = $val;
+				$sql = "DROP VIEW IF EXISTS view_ans".$msqid;
+				$rows = $db->query($sql);
+				$sql = "CREATE VIEW view_ans".$msqid." AS SELECT * FROM view_ans WHERE msqID=".$msqid;
+				if($msqid == 9)
+					$sql .= " ORDER BY answer,answerLong";
+				//error_log($sql,0);
+				$rows = $db->query($sql);
+			}
+		}
+		return $msqidar;
+	}
+	/*====================================================*
+	 ***    			drop_view_ans_msqID				***
+	 *====================================================*/
+	function drop_view_ans_msqid() {
+
+		$db = Loader::db();
+		// pickup msqID list and create view
+		$sql = "SELECT DISTINCT msqID FROM view_ans";
+		$rows = $db->query($sql);
+		foreach($rows as $row) {
+			foreach($row as $key=>$val) {
+				$msqid = $val;
+				$sql = "DROP VIEW IF EXISTS view_ans".$msqid;
+				$rows = $db->query($sql);
+			}
+		}
+		return $msqidar;
+	}
+
+	/*====================================================*
 	 ***					view						***
 	 *====================================================*/
 	function view() {
 
 		$debug = FALSE;	// no debug mode //
-		$debug = TRUE;	// debug mode //
+//		$debug = TRUE;	// debug mode //
 
 		$db = Loader::db();
 
@@ -250,18 +322,12 @@ class ListerTomoacBlockController extends BlockController {
 
 		if($bid == 0) {
 
-	/*====================Output Form Table========================*/
+	/*==============================================================================*/
+	/*========						Output Form Table						========*/
+	/*==============================================================================*/
 
 			$title = '';
 			$html = '';
-
-/*
-			$sql = "SELECT btFormTomoac.bID,btFormTomoac.surveyName FROM CollectionVersionBlocks 
-					INNER JOIN CollectionVersions ON CollectionVersionBlocks.cID=CollectionVersions.cID
-						   AND CollectionVersionBlocks.cvID=CollectionVersions.cvID
-					INNER JOIN btFormTomoac ON CollectionVersionBlocks.bID=btFormTomoac.bID
-				WHERE CollectionVersions.cvIsApproved=1";
-*/
 			$sql = "SELECT CollectionVersions.cID,btFormTomoac.bID,btFormTomoac.surveyName,CollectionVersions.cvDatePublic FROM CollectionVersionBlocks 
 						INNER JOIN CollectionVersions ON CollectionVersionBlocks.cID=CollectionVersions.cID
 						   AND CollectionVersionBlocks.cvID=CollectionVersions.cvID
@@ -279,11 +345,7 @@ class ListerTomoacBlockController extends BlockController {
 			foreach($rows as $row) {
 				$html .= '<tr>';
 				foreach($row as $key=>$val) {
-/*
-					if($key == 'bID')
-						if($setbid != $val)
-							break;
-*/
+
 					if($key == 'cID') {
 						$html .= '<td>';
 						$page = Page::getByID($val);
@@ -303,9 +365,7 @@ class ListerTomoacBlockController extends BlockController {
 						$html .= '</td>'."\n";
 					}
 				}
-/*				if($key == 'bID' && $setbid != $val)
-					continue;
-*/				$html .= '<td>';
+				$html .= '<td>';
 				$html .= '<form name="form'.$bid.'" method="post">';
 				$html .= '<input type="hidden" name="bID" value="'.$bid.'">';
 				$html .= '<input type="hidden" name="surveyName" value="'.$surveyname.'">';
@@ -319,18 +379,10 @@ class ListerTomoacBlockController extends BlockController {
 
 	/*============Output Record Table ( VIEW & LIST) ==============*/
 
-	  // set $formcid by FORM page cID
-/*
-			$sql = "SELECT cID,msqID FROM btTomoacLister
-	  				WHERE LcID=".$lcid." 
-	  						AND FbID=".$bid." 
-	  						AND LbID = (SELECT max(LbID) FROM btTomoacLister WHERE LcID=".$lcid.")
-	  				ORDER BY position,msqID";
-*/
+			// set $formcid by FORM page cID
 			$sql = "SELECT DISTINCT cID,msqID FROM btTomoacLister
 	  				WHERE cID=".$formcid." AND LcID=".$nowcid." AND LbID=".$nowbid." 
 	  				ORDER BY position,msqID";
-	  		if($debug) $head .= $sql;
 	  		$rows = $db->query($sql);
 	  		$formcid = 0;
 			$msqidorder = array();
@@ -351,8 +403,9 @@ class ListerTomoacBlockController extends BlockController {
 
 			if($_POST['function'] == 'view') {
 
-	/*=====================Output Record Table (VIEW: Single Record) ==============*/
-
+	/*==============================================================================*/
+	/*========			Output Record Table (VIEW: Single Record) 			========*/
+	/*==============================================================================*/
 				$html = '';
 				$asid = $_POST['asID'];
 
@@ -427,38 +480,16 @@ class ListerTomoacBlockController extends BlockController {
 			}
 			else {
 				
-	/*=====================Output Record Table	(LIST)===============*/
+	/*==============================================================================*/
+	/*========					Output Record Table	(LIST)					========*/
+	/*==============================================================================*/
 
-				// LIST up content 
-				$sql = "DROP VIEW IF EXISTS view_ans";
-				$rows = $db->query($sql);
-				$sql = "CREATE VIEW view_ans AS ".
-					"SELECT question,inputType,btFormTomoacQuestions.msqID,btFormTomoacAnswers.asID,answer,answerLong,created,uID ".
-						"FROM btFormTomoacQuestions ".
-							"INNER JOIN btFormTomoacAnswers ON btFormTomoacQuestions.msqID = btFormTomoacAnswers.msqID ".
-							"INNER JOIN btFormTomoacAnswerSet ON btFormTomoacAnswers.asID = btFormTomoacAnswerSet.asID ".
-						"WHERE bID=$bid ".
-						"ORDER BY btFormTomoacAnswers.asID,position ASC";
-				error_log($sql,0);
-				$rows = $db->query($sql);
+				// create view_ans
+				$this->create_view_ans( $bid );
 
-				// pickup msqID list and create view
-				$sql = "SELECT DISTINCT msqID FROM view_ans";
-				$rows = $db->query($sql);
-				$msqidar = array();
-				foreach($rows as $row) {
-					foreach($row as $key=>$val) {
-						$msqidar[] = $val;	// msqID
-						$msqid = $val;
-						$sql = "DROP VIEW IF EXISTS view_ans".$msqid;
-						$rows = $db->query($sql);
-						$sql = "CREATE VIEW view_ans".$msqid." AS SELECT * FROM view_ans WHERE msqID=".$msqid;
-						if($msqid == 9)
-							$sql .= " ORDER BY answer,answerLong";
-						$rows = $db->query($sql);
-					}
-				}
-				error_log('msqidar_count='.count($msqidar),0);
+				// create view_ans_msqID
+				$msqidar = $this->create_view_ans_msqid();
+
 				// make SQL view of total
 				for($i=0; $i<count($msqidar); $i++) {
 
@@ -491,27 +522,16 @@ class ListerTomoacBlockController extends BlockController {
 						$from .= " LEFT JOIN ".$r." ON ".$f.".asID=".$r.".asID";
 					}
 				}
-//				error_log($sql,0);
-//				if($debug) $html .= $sql.'<br>';
-				$rows = $db->query($sql);
+				$pc = new PageControler;
+				$listtotal = $db->getOne('SELECT count(*) FROM ('.$sql.') as listtotal');
+				$pc->PageControl_Init( $listtotal, $pplines );
 
-				// ------- Page control initial set START ------ //
-				$listtotal = 0;
-				foreach($rows as $row)
-					$listtotal++;
-				$listcount = $pplines;	// ページあたりの表示行数
-				$listover = 11;			// ページ遷移インデックス表示数（11 以上, 13, 15 ...）
-				$listbeginp = 0;
-				if(isset($_POST['beginp']))
-					$listbeginp = $_POST['beginp'];
-				$listendp = $listbeginp + $listcount;
-				$listcurr = 0;
-//				error_log('1/curr='.$listcurr.'/begin='.$listbeginp.'/end='.$listendp.'/total='.$listtotal.'/count='.$listcount.'/',0);
-				// ------- Page control initial set END -------- //
+				list( $listbeginp, $listendp, $listcount ) = $pc->GetPageControl();
+				$sql .= ' LIMIT '.$listbeginp.','.$listcount;
+				$rows = $db->query($sql);
 
 				// TITLE line pickup START -------
 				$sql5 = "SELECT msqID,question FROM btFormTomoacQuestions WHERE bID=".$bid." ORDER BY position,msqID";
-				// error_log($sql5,0);
 				$rows5 = $db->query($sql5);
 
 				$qas = array();
@@ -543,19 +563,11 @@ class ListerTomoacBlockController extends BlockController {
 				$dc = 0;
 				foreach($rows as $row) {
 
-					// page skip until begin START ------ //
-					if($listcurr < $listbeginp) {
-						$listcurr++;
-						continue;
-					}
-					// ------ page skip until begin END
-
 					$first = 0;
 					$htmlar = array();
 					$ic = 0;
 					foreach($row as $key=>$val) {
 
-					//	if($dc == 0 && $ic == 0) error_log($key,0);
 						$mc = count($msqidar);
 						for($i=0; $i<$mc; $i++) {
 
@@ -596,80 +608,20 @@ class ListerTomoacBlockController extends BlockController {
 						}
 						$ic++;
 					}
-					// ボタン表示
+					// Operation ボタン表示
 					for($a=0; $a<count($msqidorder); $a++)
 						$html .= $htmlar[$a];
 					$html .= $html2; $html2 = '';
 					$html .= $this->button_tag($cid, $bid, $asid, $editflag, $_POST['surveyName'], 0, $debug);
 					$html .= '</tr>';
 
-					// page skip over endp START -------
-					$listcurr++;
-					if($listcurr >= $listendp)
-						break;
-					// ------ page skip over endp END
 					$dc++;
 				}
-				// ------------ Page Control START ----------- //
-//				error_log('2/curr='.$listcurr.'/begin='.$listbeginp.'/end='.$listendp.'/total='.$listtotal.'/count='.$listcount.'/',0);
-				if($listtotal > $listcount) {
+				$bottom = $pc->PageControl();
 
-					$pp = floor($listover/2) + 1;		// 6 <= 11/2 + 1
-					$bp = $listbeginp/$listcount;		// 0,1,2,...
-					$ep = round($listtotal/$listcount);	// <= (total data line)/(pplines)
-
-					for($i=0; $i<$ep; $i++) {
-						if($i == 0 && $bp != 0) {
-							$n = ($listbeginp-$listcount)/$listcount+1;
-							$bottom .= '[<a onclick="document.formp'.$n.'.submit();">'.t('Previous').'</a>] ';
-						}
-						if($bp < $pp) {
-							// selected position from start to center
-							if($i < ($pp+3)) {
-								if($i == $bp)
-									$bottom .= '[<b> '.($i+1).' </b>] ';
-								else
-									$bottom .= '[<a onclick="document.formp'.($i+1).'.submit();"> '.($i+1).' </a>] ';
-							}
-							else if(($i == ($ep-1)) && ($ep>$listover)) {
-								$bottom .= ' ... [<a onclick="document.formp'.$ep.'.submit();"> '.$ep.' </a>]';
-							}
-						}
-						else if(($bp>=$pp)&&($bp<($ep-$pp))) {
-							// selected position center
-							if($i == 0) {
-								$bottom .= '[<a onclick="document.formp1.submit();"> 1 </a>] ... ';
-							}
-							else if(($i>=($bp-3))&&($i<=($bp+3))) {
-								if($i == $bp)
-									$bottom .= '[<b> '.($i+1).' </b>] ';
-								else
-									$bottom .= '[<a onclick="document.formp'.($i+1).'.submit();"> '.($i+1).' </a>] ';
-							}
-							else if($i == ($ep-1) && ($ep>$listover)) {
-								$bottom .= ' ... [<a onclick="document.formp'.$ep.'.submit();"> '.$ep.' </a>]';
-							}
-						}
-						else if($bp >= ($ep - $pp)) {
-							// selected position from center to end
-							if($i == 0 && ($ep>$listover)) {
-								$bottom .= '[<a onclick="document.formp1.submit();"> 1 </a>] ... ';
-							}
-							else if($i > ($ep-$listover+1))
-								if($i == $bp)
-									$bottom .= '[<b> '.($i+1).' </b>] ';
-								else
-									$bottom .= '[<a onclick="document.formp'.($i+1).'.submit();"> '.($i+1).' </a>] ';
-						}
-						if($i == ($ep-1) && $bp != ($ep-1)) {
-							$n = ($listbeginp+$listcount)/$listcount+1;
-							$bottom .= '[<a onclick="document.formp'.$n.'.submit();">'.t('Next').'</a>] ';
-						}
-						$bottomform .= "\n".'<form name="formp'.($i+1).'" action="" method="POST"><input type="hidden" name="bID" value="'.$bid.'"><input type="hidden" name="beginp" value="'.($i*$listcount).'"></form>';
-					}
-				}
-				// ------------ Page Control END-------- //
-				$bottom .= $bottomform;
+				// drop view_ans_msqID
+				$this->drop_view_ans_msqid();
+				$this->drop_view_ans( $bid );
 	  		}
 		}
 		$this->set('head',	$head);
@@ -686,7 +638,7 @@ class ListerTomoacBlockController extends BlockController {
 //		error_log('/asID='.$asid.'/formcID='.$formcid.'/debug='.$debug,0);
 
 		$tc = Page::getByID($formcid);
-		$path = $tc->getCollectionPath();		// 	/<name>
+		$path = DIR_REL . $tc->getCollectionPath();		// 	/<name>
 //		$path = '/index.php?cID='.$formcid;		// 	/index.php?cID=xxx
 
 		$html .= "\n";
@@ -777,5 +729,94 @@ class ListerTomoacBlockController extends BlockController {
 			$html .= '</td>';
 		}
 		return $html;
+	}
+}
+/*====================================================*
+ ***                	Page Control 				***
+ *====================================================*/
+class PageControler {
+
+	public $listtotal;
+	public $listcount;
+	public $listover;
+	public $listbeginp;
+	public $listendp;
+
+	function GetPageControl () {
+		return array( $this->listbeginp, $this->listendp, $this->listcount );
+	}
+	function PageControl_Init ( $lines, $pplines ) {
+
+		$this->listtotal = $lines;
+		$this->listcount = $pplines;	// ページあたりの表示行数
+		$this->listover = 11;			// ページ遷移インデックス表示数（11 以上, 13, 15 ...）
+		$this->listbeginp = 0;
+		if(isset($_POST['beginp']))
+			$this->listbeginp = $_POST['beginp'];
+		$this->listendp = $this->listbeginp + $this->listcount;
+		$this->listcurr = 0;
+		error_log('0/curr='.$this->listcurr.'/begin='.$this->listbeginp.'/end='.$this->listendp.'/total='.$this->listtotal.'/count='.$this->listcount.'/',0);
+	}
+	function PageControl () {
+
+//		error_log('2/curr='.$this->listcurr.'/begin='.$this->listbeginp.'/end='.$this->listendp.'/total='.$this->listtotal.'/count='.$this->listcount.'/',0);
+		if($this->listtotal <= $this->listcount)
+			return '';
+
+		$pp = floor($this->listover/2) + 1;		// 6 <= 11/2 + 1
+		$bp = $this->listbeginp/$this->listcount;		// 0,1,2,...
+		$ep = round($this->listtotal/$this->listcount);	// <= (total data line)/(pplines)
+
+		for($i=0; $i<$ep; $i++) {
+			if($i == 0 && $bp != 0) {
+				$n = ($this->listbeginp-$this->listcount)/$this->listcount+1;
+				$bottom .= '[<a onclick="document.formp'.$n.'.submit();">'.t('Previous').'</a>] ';
+			}
+			if($bp < $pp) {
+				// selected position from start to center
+				if($i < ($pp+3)) {
+					if($i == $bp)
+						$bottom .= '[<b> '.($i+1).' </b>] ';
+					else
+						$bottom .= '[<a onclick="document.formp'.($i+1).'.submit();"> '.($i+1).' </a>] ';
+				}
+				else if(($i == ($ep-1)) && ($ep>$this->listover)) {
+					$bottom .= ' ... [<a onclick="document.formp'.$ep.'.submit();"> '.$ep.' </a>]';
+				}
+			}
+			else if(($bp>=$pp)&&($bp<($ep-$pp))) {
+				// selected position center
+				if($i == 0) {
+					$bottom .= '[<a onclick="document.formp1.submit();"> 1 </a>] ... ';
+				}
+				else if(($i>=($bp-3))&&($i<=($bp+3))) {
+					if($i == $bp)
+						$bottom .= '[<b> '.($i+1).' </b>] ';
+					else
+						$bottom .= '[<a onclick="document.formp'.($i+1).'.submit();"> '.($i+1).' </a>] ';
+				}
+				else if($i == ($ep-1) && ($ep>$this->listover)) {
+					$bottom .= ' ... [<a onclick="document.formp'.$ep.'.submit();"> '.$ep.' </a>]';
+				}
+			}
+			else if($bp >= ($ep - $pp)) {
+				// selected position from center to end
+				if($i == 0 && ($ep>$this->listover)) {
+					$bottom .= '[<a onclick="document.formp1.submit();"> 1 </a>] ... ';
+				}
+				else if($i > ($ep-$this->listover+1))
+					if($i == $bp)
+						$bottom .= '[<b> '.($i+1).' </b>] ';
+					else
+						$bottom .= '[<a onclick="document.formp'.($i+1).'.submit();"> '.($i+1).' </a>] ';
+			}
+			if($i == ($ep-1) && $bp != ($ep-1)) {
+				$n = ($this->listbeginp+$this->listcount)/$this->listcount+1;
+				$bottom .= '[<a onclick="document.formp'.$n.'.submit();">'.t('Next').'</a>] ';
+			}
+			$bottomform .= "\n".'<form name="formp'.($i+1).'" action="" method="POST"><input type="hidden" name="bID" value="'.$bid.'"><input type="hidden" name="beginp" value="'.($i*$this->listcount).'"></form>';
+		}
+		$bottom .= $bottomform;
+		return $bottom;
 	}
 }
