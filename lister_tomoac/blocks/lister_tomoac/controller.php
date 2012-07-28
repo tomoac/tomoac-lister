@@ -178,7 +178,7 @@ class ListerTomoacBlockController extends BlockController {
 						"INNER JOIN btFormTomoacAnswerSet ON btFormTomoacAnswers.asID = btFormTomoacAnswerSet.asID ".
 					"WHERE bID=$bID ".
 					"ORDER BY btFormTomoacAnswers.asID,position ASC";
-		error_log($sql,0);
+		//error_log($sql,0);
 		$rows = $db->query($sql);
 	}
 	/*====================================================*
@@ -524,6 +524,7 @@ class ListerTomoacBlockController extends BlockController {
 				}
 				$pc = new PageControler;
 				$listtotal = $db->getOne('SELECT count(*) FROM ('.$sql.') as listtotal');
+error_log("listtotal/pplines=".$listtotal.'/'.$pplines,0);
 				$pc->PageControl_Init( $listtotal, $pplines );
 
 				list( $listbeginp, $listendp, $listcount ) = $pc->GetPageControl();
@@ -753,7 +754,7 @@ class PageControler {
 			$this->listbeginp = $_POST['beginp'];
 		$this->listendp = $this->listbeginp + $this->listcount;
 		$this->listcurr = 0;
-		error_log('0/curr='.$this->listcurr.'/begin='.$this->listbeginp.'/end='.$this->listendp.'/total='.$this->listtotal.'/count='.$this->listcount.'/',0);
+//		error_log('0/curr='.$this->listcurr.'/begin='.$this->listbeginp.'/end='.$this->listendp.'/total='.$this->listtotal.'/count='.$this->listcount.'/',0);
 	}
 	function PageControl () {
 
@@ -761,9 +762,9 @@ class PageControler {
 		if($this->listtotal <= $this->listcount)
 			return '';
 
-		$pp = floor($this->listover/2) + 1;		// 6 <= 11/2 + 1
+		$pp = floor($this->listover/2) + 1;				// 6 <= 11/2 + 1
 		$bp = $this->listbeginp/$this->listcount;		// 0,1,2,...
-		$ep = round($this->listtotal/$this->listcount);	// <= (total data line)/(pplines)
+		$ep = ceil($this->listtotal/$this->listcount);	// <= (total data line)/(pplines)
 
 		for($i=0; $i<$ep; $i++) {
 			if($i == 0 && $bp != 0) {
