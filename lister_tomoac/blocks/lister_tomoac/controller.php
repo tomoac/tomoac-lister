@@ -54,30 +54,13 @@ class ListerTomoacBlockController extends BlockController {
 
 				$colsOrder[] = array( "msqID" => intval($i), "colsOrder" => intval($position) );
 				$rowsOrder[] = array( "msqID" => intval($i), "rowsOrder" => intval($sorder)   );
-/*
-				$vals = array( 0, intval($fid), intval($i), intval($position), intval($sorder), intval($cid), intval($lcid), intval($lbid), 
-								intval($editFlag), intval($regdateflag), intval($reguserflag), intval($pplines) );
-				$sql = "INSERT INTO btTomoacLister (mID, FbID, msqID, position, sorder, cID, LcID, LbID, 
-													editFlag, regdateFlag, reguserFlag, pplines ) 
-										values (?,?,?,?,?,?,?,?,?,?,?,?)";
-//				$db->query($sql, $vals);
-*/
+
 				if(--$itemc == 0)
 					break;
 			}
 		}
 		$data['colsOrder'] = json_encode( $colsOrder );
 		$data['rowsOrder'] = json_encode( $rowsOrder );
-
-/*
-		$vals = array( 0, intval($fid), intval($i), $data['colsOrder'], $data['rowsOrder'],
-						intval($cid), intval($lcid), intval($lbid), intval($editFlag), intval($regdateflag), intval($reguserflag), intval($pplines) );
-		$sql = "INSERT INTO btTomoacLister (mID, FbID, 
-						msqID, colsOrder, rowsOrder,
-						cID, LcID, LbID, editFlag, regdateFlag, reguserFlag, pplines ) 
-					values (?,?,?,?,?,?,?,?,?,?,?,?)";
-		$db->query($sql, $vals);
-*/
 		$data['bID'] = intval($fid);
 		$data['FbID'] = intval($fid);
 		$data['cID'] = intval($cid);
@@ -134,37 +117,6 @@ class ListerTomoacBlockController extends BlockController {
 		return array( $setbid, $formcid, $colsOrder, $rowsOrder, $editFlag, $regdateflag, $reguserflag, $pplines, $msqidar );
 	}
 	/*====================================================*
-	 ***			get_lister ()						***
-	 *====================================================*/
-/*
-	function get_lister( $nowcid, $nowbid ) {
-
-		$db = Loader::db();
-		$sql = "SELECT * FROM btTomoacLister WHERE LcID=".$nowcid." AND LbID=".$nowbid;
-		$rows = $db->query($sql);
-		foreach($rows as $row) {
-			foreach($row as $key=>$val) {
-				if($key == 'FbID')
-					$formbid = $val;
-				if($key == 'cID')
-					$formcid = $val;
-				if($key == 'editFlag')
-					$editFlag = $val;
-				if($key == 'regdateFlag')
-					$regdateflag = $val;
-				if($key == 'reguserFlag')
-					$reguserflag = $val;
-				if($key == 'pplines') {
-					$pplines = $val;
-					if($pplines <= 0)
-						$pplines = 10;
-				}
-			}
-		}
-		return array( $formbid, $formcid, $editFlag, $regdateflag, $reguserflag, $pplines );
-	}
-*/
-	/*====================================================*
 	 ***			get_msqID_list_from_sorder			***
 	 ***	 rowsOrder順に並んだmsqIDの配列を返す。		***
 	 *====================================================*/
@@ -172,7 +124,7 @@ class ListerTomoacBlockController extends BlockController {
 		$debug = 0;	// debug
 
 		$db = Loader::db();
-		$sql = "SELECT rowsOrder FROM btTomoacLister".
+		$sql = "SELECT mID,rowsOrder FROM btTomoacLister".
 	  				" WHERE cID=".$formcid." AND LcID=".$nowcid." AND LbID=".$nowbid." ORDER BY mID DESC LIMIT 1";
 		if($debeg) error_log($sql,0);
   		$rows = $db->query($sql);
@@ -198,7 +150,7 @@ class ListerTomoacBlockController extends BlockController {
 	 ***	 colsOrder順に並んだmsqIDの配列を返す。		***
 	 *====================================================*/
 	function get_msqID_list ( $formcid, $nowcid, $nowbid ) { 
-		$debug = 1;	// debug
+		$debug = 0;	// debug
 
 		$db = Loader::db();
 		$sql = "SELECT colsOrder FROM btTomoacLister".
@@ -221,32 +173,6 @@ class ListerTomoacBlockController extends BlockController {
 			}
 		}
 		return $msqidorder;
-	}
-	/*====================================================*		たぶんいらない。
-	 ***			get_cID ()							***
-	 *====================================================*/
-	function get_cID ( $formcid, $nowcid, $nowbid ) { 
-/*
-		$db = Loader::db();
-		// set $formcid by FORM page cID
-		$sql = "SELECT DISTINCT cID,msqID FROM btTomoacLister".
-	  				" WHERE cID=".$formcid." AND LcID=".$nowcid." AND LbID=".$nowbid." AND (colsOrder IS NULL)".
-	  				" ORDER BY position,msqID";
-  		$rows = $db->query($sql);
-  		$formcid = 0;
-		$msqidorder = array();
-		foreach($rows as $row) {
-			foreach($row as $key=>$val) {
-				if($key == 'cID') {
-					if($formcid == 0)
-						$formcid = $val;	// Set Edit Form bID
-				} else if($key == 'msqID') {
-					$msqidorder[] = $val;
-				}
-			}
-		}
-*/
-		return $formcid;
 	}
 	/*====================================================*
 	 ***			get_form_list (add & edit)			***
@@ -632,10 +558,10 @@ class ListerTomoacBlockController extends BlockController {
 						if($i != 0)
 							$sql2 .= ',';
 						if($sorder[$i] > 0)
-							$sql2 .= 'answer'.$sorder[$i];
+							$sql2 .= 'answer'.$sorder[$i].',answerLong'.$sorder[$i];
 						$i++;
 					}
-					//	error_log($sql2,0);
+					//error_log($sql2,0);
 					$sql .= $sql2;
 				}
 				// 表示するページのみ抽出

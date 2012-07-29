@@ -100,7 +100,7 @@
 				$checked = 1;
 		} else
 			$checked = 0;
-		echo $form->checkbox('editFlag'.$bid, $bid, $checked);	// enable/disable edit
+		echo $form->checkbox('editFlag'.$bid, 1, $checked);	// enable/disable edit
 		echo t('Enable Edit');
 
 		// 登録日付の表示可否のチェックボックス
@@ -113,7 +113,7 @@
 				$checked = 1;
 		} else
 			$checked = 0;
-		echo $form->checkbox('regdateFlag'.$bid, $bid, $checked);	// enable/disable registration date
+		echo $form->checkbox('regdateFlag'.$bid, 1, $checked);	// enable/disable registration date
 		echo t('Show Registration Date');
 
 		// 登録ユーザの表示可否のチェックボックス
@@ -125,7 +125,7 @@
 				$checked = 1;
 		} else
 			$checked = 0;
-		echo $form->checkbox('reguserFlag'.$bid, $bid, $checked);	// enable/disable registration user
+		echo $form->checkbox('reguserFlag'.$bid, 1, $checked);	// enable/disable registration user
 		echo t('Show Registration User');
 
 		// 一覧表の表示行数
