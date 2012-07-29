@@ -12,6 +12,7 @@
 		<field name="FbID" type="I" />
 		<field name="msqID" type="I" />
 		<field name="position" type="I" />
+		<field name="sorder" type="I" />
 		<field name="editFlag" type="I" />
 		<field name="regdateFlag" type="I" />
 		<field name="reguserFlag" type="I" />

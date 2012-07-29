@@ -139,6 +139,7 @@
 
 		// １つのフォーム処理
 		echo '<table>';
+		echo '<tr><td></td><td>Item Order<br />(0: no display)</td><td>Sort Key Order<br />(0: Inapplicable)</td></tr>';
 
 		$i = 0;
 		$itemc = 0;
@@ -154,7 +155,9 @@
 					if($debug)
 						echo '(msqID:'.$msqid.')';
 					echo '</td><td>';
-					echo $form->text('bID_'.$bid.'_'.$msqid, ++$i, array('size'=>4));
+					echo $form->text('bID_'.$bid.'_'.$msqid, ($i+1), array('size'=>4));
+					echo '</td><td>';
+					echo $form->text('sID_'.$bid.'_'.$msqid, ($i+1), array('size'=>4));
 					echo '</td></tr>';
 					if($min == -1)	$min = $msqid;
 					if($max == -1)	$max = $msqid;
@@ -163,6 +166,7 @@
 					$itemc++;
 				}
 			}
+			$i++;
 		}
 		echo $form->hidden('tID_'.$bid, $itemc);	// item count
 		echo $form->hidden('iID_'.$bid, $min);		// start number of items
