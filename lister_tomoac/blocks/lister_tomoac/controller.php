@@ -553,17 +553,19 @@ class ListerTomoacBlockController extends BlockController {
 				list( $listbeginp, $listendp, $listcount ) = $pc->GetPageControl();
 
 				// 表示順をソートするため、順番(sorder)を参照して、サブクエリーする
-				$sql = 'SELECT * FROM ('.$sql.') AS temp ORDER BY ';
 				$i = 0;
 				$sorder = $this->get_msqID_list_from_sorder($bid, $nowbid);
-				foreach($msqidar as $m) {
-					if($sorder[$i] == 0)
-						break;
-					if($i != 0)
-						$sql .= ',';
-					if($sorder[$i] > 0)
-						$sql .= 'answer'.$sorder[$i];
-					$i++;
+				if(count($sorder) > 0) {
+					$sql = 'SELECT * FROM ('.$sql.') AS temp ORDER BY ';
+					foreach($msqidar as $m) {
+						if($sorder[$i] == 0)
+							break;
+						if($i != 0)
+							$sql .= ',';
+						if($sorder[$i] > 0)
+							$sql .= 'answer'.$sorder[$i];
+						$i++;
+					}
 				}
 				// 表示するページのみ抽出
 				$sql .= ' LIMIT '.$listbeginp.','.$listcount;
