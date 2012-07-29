@@ -1,16 +1,13 @@
 <?php  defined('C5_EXECUTE') or die(_("Access Denied."));
 
 	$debug = 'FALSE';
-	$debug = 'TRUE';
+//	$debug = 'TRUE';
 
 	$db = Loader::db();
 
 	$c = Page::getCurrentPage();
 	$lcid = $c->getCollectionID();
 	$bid = $controller->bID;
-
-	error_log('lcID='.$lcid,0);
-	error_log('bID='.$bid,0);
 
 	$form = Loader::helper('form');
 
@@ -33,10 +30,6 @@
 				$ctabar[] = $val;	// pooling Form bID
 	}
 	$ctab = array_search($formbid, $ctabar);	// initial tab position
-
-//	error_log('form cID='.$formcid,0);
-//	error_log('form bID='.$formbid,0);
-//	error_log('tab no='.$ctab,0);
 
 	$jss = '
 	<script type="text/javascript">

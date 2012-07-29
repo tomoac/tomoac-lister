@@ -124,8 +124,8 @@ class ListerTomoacBlockController extends BlockController {
 		$debug = 0;	// debug
 
 		$db = Loader::db();
-		$sql = "SELECT mID,rowsOrder FROM btTomoacLister".
-	  				" WHERE cID=".$formcid." AND LcID=".$nowcid." AND LbID=".$nowbid." ORDER BY mID DESC LIMIT 1";
+		$sql = "SELECT rowsOrder FROM btTomoacLister".
+	  				" WHERE cID=".$formcid." AND LcID=".$nowcid." AND LbID=".$nowbid." LIMIT 1";
 		if($debeg) error_log($sql,0);
   		$rows = $db->query($sql);
 		$msqidorder = array();
@@ -154,7 +154,7 @@ class ListerTomoacBlockController extends BlockController {
 
 		$db = Loader::db();
 		$sql = "SELECT colsOrder FROM btTomoacLister".
-	  				" WHERE cID=".$formcid." AND LcID=".$nowcid." AND LbID=".$nowbid." ORDER BY mID DESC LIMIT 1";
+	  				" WHERE cID=".$formcid." AND LcID=".$nowcid." AND LbID=".$nowbid." LIMIT 1";
 		if($debug) error_log($sql,0);
   		$rows = $db->query($sql);
 		$msqidorder = array();
