@@ -16,6 +16,8 @@
 
 	list(	$formbid, 
 			$formcid, 
+			$colsOrder,
+			$rowsOrder, 
 			$editflag, 
 			$regdateflag, 
 			$reguserflag, 
@@ -139,7 +141,10 @@
 
 		// １つのフォーム処理
 		echo '<table>';
-		echo '<tr><td></td><td>Item Order<br />(0: no display)</td><td>Sort Key Order<br />(0: Inapplicable)</td></tr>';
+		echo '<tr><td></td><td>Column Order<br />(0: no display)</td><td>Row Order<br />(0: Inapplicable)</td></tr>';
+
+		$cols = json_decode( $colsOrder );
+		$rows = json_decode( $rowsOrder );
 
 		$i = 0;
 		$itemc = 0;
@@ -155,9 +160,11 @@
 					if($debug)
 						echo '(msqID:'.$msqid.')';
 					echo '</td><td>';
-					echo $form->text('bID_'.$bid.'_'.$msqid, ($i+1), array('size'=>4));
+					$co = $cols[$i]->{"colsOrder"};
+					echo $form->text('bID_'.$bid.'_'.$msqid, (is_null($co))?($i+1):$co, array('size'=>4));
 					echo '</td><td>';
-					echo $form->text('sID_'.$bid.'_'.$msqid, ($i+1), array('size'=>4));
+					$ro = $rows[$i]->{"rowsOrder"};
+					echo $form->text('sID_'.$bid.'_'.$msqid, (is_null($ro))?($i+1):$ro, array('size'=>4));
 					echo '</td></tr>';
 					if($min == -1)	$min = $msqid;
 					if($max == -1)	$max = $msqid;
