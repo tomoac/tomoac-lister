@@ -61,7 +61,7 @@ class ListerTomoacBlockController extends BlockController {
 		}
 		$data['colsOrder'] = json_encode( $colsOrder );
 		$data['rowsOrder'] = json_encode( $rowsOrder );
-		$data['bID'] = intval($fid);
+//		$data['bID'] = intval($fid);
 		$data['FbID'] = intval($fid);
 		$data['cID'] = intval($cid);
 		$data['LcID'] = intval($lcid);
@@ -120,26 +120,28 @@ class ListerTomoacBlockController extends BlockController {
 	 ***			get_msqID_list_from_sorder			***
 	 ***	 rowsOrder順に並んだmsqIDの配列を返す。		***
 	 *====================================================*/
-	function get_msqID_list_from_sorder( $formcid, $nowcid, $nowbid ) { 
+	function get_msqID_list_from_sorder( $cID, $LcID, $LbID ) { 
 		$debug = 0;	// debug
 
 		$db = Loader::db();
-		$sql = "SELECT rowsOrder FROM btTomoacLister".
-	  				" WHERE cID=".$formcid." AND LcID=".$nowcid." AND LbID=".$nowbid." LIMIT 1";
-		if($debeg) error_log($sql,0);
+		$sql = "SELECT rowsOrder FROM btTomoacLister WHERE cID=".$cID." AND LcID=".$LcID." AND LbID=".$LbID." LIMIT 1";
+		if($debug) error_log($sql,0);
   		$rows = $db->query($sql);
 		$msqidorder = array();
 		foreach($rows as $row) {
 			foreach($row as $key=>$val) {
 				if($key == 'rowsOrder') {
 					$ar = json_decode($val);
-					foreach($ar as $a)
-						if($a->{"rowsOrder"} > 0)
-							 $f[] = $a->{"rowsOrder"};
-					array_multisort($f,SORT_ASC,$ar);
-					foreach($ar as $a)
+					foreach($ar as $a) {
+						if($a->{"rowsOrder"} > 0) {
+							$f[] = $a->{"rowsOrder"};
+							$fr[] = $a;
+						}
+					}
+					array_multisort($f,SORT_ASC,$fr);
+					foreach($fr as $a)
 						$msqidorder[] = $a->{"msqID"};
-					if($debeg) foreach($msqidorder as $m) error_log('msqID='.$m,0);
+					if($debug) foreach($msqidorder as $m) error_log('msqID='.$m,0);
 				}
 			}
 		}
@@ -149,12 +151,11 @@ class ListerTomoacBlockController extends BlockController {
 	 ***			get_msqID_list ()					***
 	 ***	 colsOrder順に並んだmsqIDの配列を返す。		***
 	 *====================================================*/
-	function get_msqID_list ( $formcid, $nowcid, $nowbid ) { 
+	function get_msqID_list ( $cID, $LcID, $LbID ) { 
 		$debug = 0;	// debug
 
 		$db = Loader::db();
-		$sql = "SELECT colsOrder FROM btTomoacLister".
-	  				" WHERE cID=".$formcid." AND LcID=".$nowcid." AND LbID=".$nowbid." LIMIT 1";
+		$sql = "SELECT colsOrder FROM btTomoacLister WHERE cID=".$cID." AND LcID=".$LcID." AND LbID=".$LbID." LIMIT 1";
 		if($debug) error_log($sql,0);
   		$rows = $db->query($sql);
 		$msqidorder = array();
@@ -162,11 +163,14 @@ class ListerTomoacBlockController extends BlockController {
 			foreach($row as $key=>$val) {
 				if($key == 'colsOrder') {
 					$ar = json_decode($val);
-					foreach($ar as $a)
-						if($a->{"colsOrder"} > 0)
+					foreach($ar as $a) {
+						if($a->{"colsOrder"} > 0) {
 							 $f[] = $a->{"colsOrder"};
-					array_multisort($f,SORT_ASC,$ar);
-					foreach($ar as $a)
+							 $fr[]  = $a;
+						}
+					}
+					array_multisort($f,SORT_ASC,$fr);
+					foreach($fr as $a)
 						$msqidorder[] = $a->{"msqID"};
 					if($debug) foreach($msqidorder as $m) error_log('msqID='.$m,0);
 				}
@@ -231,12 +235,14 @@ class ListerTomoacBlockController extends BlockController {
 //		return date('Y年n月j日 H時i分s秒', $timestamp);		// japanese
 		return date('j F, Y H:i:s', $timestamp);			// english
 	}
-	/* ============ Format from database date ============*/
+	/* ============== Get Username from uID ==============*/
 	function get_username( $uid ) {
-		$uo = UserInfo::getByID( $uid );
-		return $uo->getUserName();
+		if($uid > 0) {
+			$uo = UserInfo::getByID( $uid );
+			return $uo->getUserName();
+		} else
+			return '';
 	}
-
 	/*====================================================*
 	 ***              create view (view_ans)			***
 	 *====================================================*/
@@ -314,8 +320,7 @@ class ListerTomoacBlockController extends BlockController {
 	 *====================================================*/
 	function view() {
 
-		$debug = FALSE;	// no debug mode //
-//		$debug = TRUE;	// debug mode //
+		$debug = 0;	// debug
 
 		$db = Loader::db();
 
@@ -330,6 +335,8 @@ class ListerTomoacBlockController extends BlockController {
 
 		$nowcid = $c->getCollectionID();
 		$nowbid = $this->bID;
+
+		if($debug) error_log('Lister cID/bID='.$nowcid.'/'.$nowbid,0);
 
 		$givenbid = $_POST['bID'];
 

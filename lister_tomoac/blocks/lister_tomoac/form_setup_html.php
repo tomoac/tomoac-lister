@@ -24,12 +24,11 @@
 	// 有効なフォームをリストアップ
 	$rows = $controller->get_form_list();
 
-	foreach($rows as $row) {
+	foreach($rows as $row)
 		foreach($row as $key=>$val)
 			if($key == 'bID')
-				$ctabar[] = $val;	// pooling Form bID
-	}
-	$ctab = array_search($formbid, $ctabar);	// initial tab position
+				$FbIDar[] = $val;				// $FbIDar: List of Form bID
+	$ctab = array_search($formbid, $FbIDar);	// $ctab: Current/Initial tab position
 
 	$jss = '
 	<script type="text/javascript">
@@ -55,7 +54,7 @@
 			echo '<li class="ccm-nav-active">';
 		else
 			echo '<li>';
-		echo '<a href="javascript:void(0)" id="ccm-button-'.$i.'">'.$row['surveyName'].'</a></li>';
+		echo '<a href="javascript:void(0)" id="ccm-button-'.$i.'">'.$row['surveyName'].' (bID:'.$FbIDar[$i].')</a></li>';
 		$i++;
 	}
 ?>
