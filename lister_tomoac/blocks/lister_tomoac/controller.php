@@ -12,7 +12,7 @@ class ListerTomoacBlockController extends BlockController {
 	}
 	
 	public function getBlockTypeName() {
-		return t('Darabase Lister');
+		return t('Database Lister');
 	}	 
 
 	/*====================================================*
@@ -138,9 +138,11 @@ class ListerTomoacBlockController extends BlockController {
 							$fr[] = $a;
 						}
 					}
-					array_multisort($f,SORT_ASC,$fr);
-					foreach($fr as $a)
-						$msqidorder[] = $a->{"msqID"};
+					if(count($f) > 0) {
+						array_multisort($f,SORT_ASC,$fr);
+						foreach($fr as $a)
+							$msqidorder[] = $a->{"msqID"};
+					}
 					if($debug) foreach($msqidorder as $m) error_log('msqID='.$m,0);
 				}
 			}
@@ -169,14 +171,34 @@ class ListerTomoacBlockController extends BlockController {
 							 $fr[]  = $a;
 						}
 					}
-					array_multisort($f,SORT_ASC,$fr);
-					foreach($fr as $a)
-						$msqidorder[] = $a->{"msqID"};
+					if(count($f) > 0) {
+						array_multisort($f,SORT_ASC,$fr);
+						foreach($fr as $a)
+							$msqidorder[] = $a->{"msqID"};
+					}
 					if($debug) foreach($msqidorder as $m) error_log('msqID='.$m,0);
 				}
 			}
 		}
 		return $msqidorder;
+	}
+	/*====================================================*
+	 ***			get_colsOrderNo ()					***
+	 *====================================================*/
+	function get_colsOrderNo( $cols, $msqID ) {
+		foreach($cols as $co)
+			if($co->{"msqID"} == $msqID)
+				return $co->{"colsOrder"}+0;
+		return 0;
+	}
+	/*====================================================*
+	 ***			get_rowsOrderNo ()					***
+	 *====================================================*/
+	function get_rowsOrderNo( $rows, $msqID ) {
+		foreach($rows as $ro)
+			if($ro->{"msqID"} == $msqID)
+				return $ro->{"rowsOrder"}+0;
+		return 0;
 	}
 	/*====================================================*
 	 ***			get_form_list (add & edit)			***

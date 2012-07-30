@@ -121,7 +121,7 @@
 		echo t('Show Registration User');
 
 		// 一覧表の表示行数
-		echo '&nbsp;&nbsp;&nbsp;&nbsp;';
+		echo '<br>&nbsp;&nbsp;&nbsp;&nbsp;';
 		if($pplines == 0)
 			$pplines = 10;
 		echo t('Line par page: ');
@@ -135,16 +135,19 @@
 		echo '<table>';
 		echo '<tr><td></td><td>Column Order<br />(0: no display)</td><td>Row Order<br />(0: Inapplicable)</td></tr>';
 
-		$cols = json_decode( $colsOrder );
-		$rows = json_decode( $rowsOrder );
+		$cls = json_decode( $colsOrder );
+		$rws = json_decode( $rowsOrder );
+
+//		error_log('colsOrder='.$colsOrder,0);
+//		error_log('rowsOrder='.$rowsOrder,0);
 
 		$i = 0;
 		$itemc = 0;
 		$min = -1;
 		$max = -1;
 		foreach($rows2 as $row2) {
-			// １つのアイテム処理
 			foreach($row2 as $key=>$val) {
+			// １つのアイテム処理
 				if($key == 'msqID')
 					$msqid = $val;
 				if($key == 'question') {
@@ -152,11 +155,9 @@
 					if($debug)
 						echo '(msqID:'.$msqid.')';
 					echo '</td><td>';
-					$co = $cols[$i]->{"colsOrder"};
-					echo $form->text('bID_'.$bid.'_'.$msqid, (is_null($co))?($i+1):$co, array('size'=>4));
+					echo $form->text('bID_'.$bid.'_'.$msqid, $controller->get_colsOrderNo( $cls,$msqid ), array('size'=>3));
 					echo '</td><td>';
-					$ro = $rows[$i]->{"rowsOrder"};
-					echo $form->text('sID_'.$bid.'_'.$msqid, (is_null($ro))?($i+1):$ro, array('size'=>4));
+					echo $form->text('sID_'.$bid.'_'.$msqid, $controller->get_rowsOrderNo( $rws,$msqid ), array('size'=>3));
 					echo '</td></tr>';
 					if($min == -1)	$min = $msqid;
 					if($max == -1)	$max = $msqid;
@@ -185,5 +186,6 @@
 		echo $form->selectPage('FormcID');
 	*/
 	echo $jss;
+
 ?>
 </div>
