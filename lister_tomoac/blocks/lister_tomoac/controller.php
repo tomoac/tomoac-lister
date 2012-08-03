@@ -84,7 +84,6 @@ class ListerTomoacBlockController extends BlockController {
 			$db = Loader::db();
 
 			$sql = "SELECT * FROM btTomoacLister WHERE LcID=".$cid." AND LbID=".$bid;
-			//error_log($sql,0);
 			$rows = $db->query($sql);
 			foreach($rows as $row) {
 				foreach($row as $key=>$val) {

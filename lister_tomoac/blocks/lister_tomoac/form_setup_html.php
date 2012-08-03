@@ -155,9 +155,11 @@
 					if($debug)
 						echo '(msqID:'.$msqid.')';
 					echo '</td><td>';
-					echo $form->text('bID_'.$bid.'_'.$msqid, $controller->get_colsOrderNo( $cls,$msqid ), array('size'=>3));
+					$orders = (count($cls)>0)?$controller->get_colsOrderNo( $cls,$msqid ):($itemc+1);
+					echo $form->text('bID_'.$bid.'_'.$msqid, $orders, array('size'=>3));
 					echo '</td><td>';
-					echo $form->text('sID_'.$bid.'_'.$msqid, $controller->get_rowsOrderNo( $rws,$msqid ), array('size'=>3));
+					$orders = (count($rws)>0)?$controller->get_rowsOrderNo( $rws,$msqid ):($itemc+1);
+					echo $form->text('sID_'.$bid.'_'.$msqid, $orders, array('size'=>3));
 					echo '</td></tr>';
 					if($min == -1)	$min = $msqid;
 					if($max == -1)	$max = $msqid;
