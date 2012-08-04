@@ -1,25 +1,28 @@
 <?php  defined('C5_EXECUTE') or die(_("Access Denied."));
 
+define('COLS_ORDER', 1);
+define('ROWS_ORDER', 2);
+define('ITEM_FORMAT', 3);
+
 	$debug = 'FALSE';
 //	$debug = 'TRUE';
 
 	$db = Loader::db();
 
 	$c = Page::getCurrentPage();
-	$lcid = $c->getCollectionID();
+	$LcID = $c->getCollectionID();
+	$LbID = $controller->bID;
 	$bid = $controller->bID;
 
 	$form = Loader::helper('form');
 
 	list(	$formbid, 
 			$formcid, 
-			$colsOrder,
-			$rowsOrder, 
 			$editflag, 
 			$regdateflag, 
 			$reguserflag, 
 			$pplines, 
-			$msqidar) = $controller->get_lister_items( $lcid, $bid );
+			$msqidar) = $controller->get_lister_items( $LcID, $bid );
 
 	// 有効なフォームをリストアップ
 	$rows = $controller->get_form_list();
@@ -133,13 +136,13 @@
 
 		// １つのフォーム処理
 		echo '<table>';
-		echo '<tr><td></td><td>Column Order<br />(0: no display)</td><td>Row Order<br />(0: Inapplicable)</td></tr>';
-
-		$cls = json_decode( $colsOrder );
-		$rws = json_decode( $rowsOrder );
-
-//		error_log('colsOrder='.$colsOrder,0);
-//		error_log('rowsOrder='.$rowsOrder,0);
+		// title lines
+		echo '<tr>';
+		echo '<td></td>';
+		echo '<td>'.t('Column Order<br />(0: no display)').'</td>';
+		echo '<td>'.t('Row Order<br />(0: Inapplicable)').'</td>';
+		echo '<td>'.t('Display<br />&nbsp;&nbsp;format').'</td>';
+		echo '</tr>';
 
 		$i = 0;
 		$itemc = 0;
@@ -150,16 +153,36 @@
 			// １つのアイテム処理
 				if($key == 'msqID')
 					$msqid = $val;
-				if($key == 'question') {
+				else if($key == 'inputType')
+					$inputType = $val;
+				else if($key == 'question') {
 					echo '<tr><td>'.$val;
 					if($debug)
 						echo '(msqID:'.$msqid.')';
 					echo '</td><td>';
-					$orders = (count($cls)>0)?$controller->get_colsOrderNo( $cls,$msqid ):($itemc+1);
+					$orders = $controller->get_Number_by_msqID( COLS_ORDER, $LcID, $LbID, $msqid );
+					if($orders < 0)	$orders = $itemc+1;
 					echo $form->text('bID_'.$bid.'_'.$msqid, $orders, array('size'=>3));
 					echo '</td><td>';
-					$orders = (count($rws)>0)?$controller->get_rowsOrderNo( $rws,$msqid ):($itemc+1);
+					$orders = $controller->get_Number_by_msqID( ROWS_ORDER, $LcID, $LbID, $msqid );
+					if($orders < 0)	$orders = $itemc+1;
 					echo $form->text('sID_'.$bid.'_'.$msqid, $orders, array('size'=>3));
+					echo '</td><td>';
+					$fmt = $controller->get_String_by_msqID( ITEM_FORMAT, $LcID, $LbID, $msqid );
+					if(strlen($fmt) == 0) {
+						switch($inputType) {
+						case 'jname':
+							$fmt = '%s %s (%s %s)';
+							break;
+						case 'postno':
+							$fmt = '〒%03d-%04d %s %s %s';
+							break;
+						default:
+							$fmt = '%s';
+							break;
+						}
+					}
+					echo $form->text('gID_'.$bid.'_'.$msqid, $fmt, array('size'=>16));
 					echo '</td></tr>';
 					if($min == -1)	$min = $msqid;
 					if($max == -1)	$max = $msqid;
@@ -173,7 +196,7 @@
 		echo $form->hidden('tID_'.$bid, $itemc);	// item count
 		echo $form->hidden('iID_'.$bid, $min);		// start number of items
 		echo $form->hidden('xID_'.$bid, $max);		// end nubber of items
-		echo $form->hidden('LcID', $lcid);			// page cID of Lister
+		echo $form->hidden('LcID', $LcID);			// page cID of Lister
 
 		echo '</table>';
 		echo '</div>';

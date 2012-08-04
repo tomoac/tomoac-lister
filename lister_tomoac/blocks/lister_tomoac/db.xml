@@ -13,7 +13,19 @@
 		<field name="regdateFlag" type="I" />
 		<field name="reguserFlag" type="I" />
 		<field name="pplines" type="I" />
-		<field name="colsOrder" type="X" />
-		<field name="rowsOrder" type="X" />
+		<field name="rID" type="I" />
+	</table>
+
+	<table name="btTomoacListerItems">
+		<field name="dID" type="I">
+			<key />
+			<autoincrement />			
+			<unsigned />
+		</field>
+		<field name="rID" type="I" />
+		<field name="msqID" type="I" />
+		<field name="kinda" type="I" />
+		<field name="vnum" type="I" />
+		<field name="vstr" type="X" />
 	</table>
 </schema>
