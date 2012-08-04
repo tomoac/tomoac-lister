@@ -139,7 +139,7 @@ define('ITEM_FORMAT', 3);
 		// title lines
 		echo '<tr>';
 		echo '<td></td>';
-		echo '<td>'.t('Column Order<br />(0: no display)').'</td>';
+		echo '<td>'.t('Column Order<br />(0:no display)').'</td>';
 		echo '<td>'.t('Row Order<br />(0: Inapplicable)').'</td>';
 		echo '<td>'.t('Display<br />&nbsp;&nbsp;format').'</td>';
 		echo '</tr>';
@@ -161,15 +161,15 @@ define('ITEM_FORMAT', 3);
 						echo '(msqID:'.$msqid.')';
 					echo '</td><td>';
 					$orders = $controller->get_Number_by_msqID( COLS_ORDER, $LcID, $LbID, $msqid );
-					if($orders < 0)	$orders = $itemc+1;
+					if(is_null($orders)) $orders = $itemc+1;
 					echo $form->text('bID_'.$bid.'_'.$msqid, $orders, array('size'=>3));
 					echo '</td><td>';
 					$orders = $controller->get_Number_by_msqID( ROWS_ORDER, $LcID, $LbID, $msqid );
-					if($orders < 0)	$orders = $itemc+1;
+					if(is_null($orders)) $orders = $itemc+1;
 					echo $form->text('sID_'.$bid.'_'.$msqid, $orders, array('size'=>3));
 					echo '</td><td>';
 					$fmt = $controller->get_String_by_msqID( ITEM_FORMAT, $LcID, $LbID, $msqid );
-					if(strlen($fmt) == 0) {
+					if(is_null($fmt)) {
 						switch($inputType) {
 						case 'jname':
 							$fmt = '%s %s (%s %s)';

@@ -50,7 +50,6 @@ class ListerTomoacBlockController extends BlockController {
  			$vid = $val + 1;
  			break;
  		}
-//		error_log('/itemc='.$itemc.'/itmin='.$itmin.'/itmax='.$itmax.'/',0);
 
 		$sql8 = "SELECT max(rID) FROM btTomoacListerItems";
 		$rID = $db->GetOne($sql8);
@@ -61,9 +60,6 @@ class ListerTomoacBlockController extends BlockController {
 				$position = $data['bID_'.$fid.'_'.$i];
 				$sorder = $data['sID_'.$fid.'_'.$i];
 				$dformat = $data['gID_'.$fid.'_'.$i];
-
-//				$colsOrder[] = array( "msqID" => intval($i), "colsOrder" => intval($position) );
-//				$rowsOrder[] = array( "msqID" => intval($i), "rowsOrder" => intval($sorder)   );
 
 				// columes order (1)
 				$sql8 = 'INSERT INTO btTomoacListerItems (rID, msqID, kinda, vnum) VALUES ('.$rID.','.intval($i).','.COLS_ORDER.','.intval($position).')';
@@ -79,11 +75,7 @@ class ListerTomoacBlockController extends BlockController {
 					break;
 			}
 		}
-
-//		$data['colsOrder'] = json_encode( $colsOrder );
-//		$data['rowsOrder'] = json_encode( $rowsOrder );
 		$data['rID'] = intval($rID);
-//		$data['bID'] = intval($fid);
 		$data['FbID'] = intval($fid);
 		$data['cID'] = intval($cid);
 		$data['LcID'] = intval($lcid);
@@ -92,6 +84,7 @@ class ListerTomoacBlockController extends BlockController {
 		$data['regdateFlag'] = intval($regdateflag);
 		$data['reguserFlag'] = intval($reguserflag);
 		$data['pplines'] = intval($pplines);
+
 		parent::save($data);
 	}
 
@@ -100,8 +93,6 @@ class ListerTomoacBlockController extends BlockController {
 	 *====================================================*/
 	function get_lister_items( $cid, $bid ) {
 
-		// 表示対象のフィールド番号（msqID）を拾い出す。
-		// 		結果は、$msqidar[] に入れる
 		if($bid > 0) {
 			$db = Loader::db();
 
@@ -148,35 +139,39 @@ class ListerTomoacBlockController extends BlockController {
 		if($rID == '')
 			return NULL;
 
-		$sql = "SELECT msqID FROM btTomoacListerItems WHERE rID=$rID AND kinda=$kinda ORDER BY vnum";
+		$sql = "SELECT msqID,vnum FROM btTomoacListerItems WHERE rID=$rID AND kinda=$kinda ORDER BY abs(vnum)";
 		if($debug) error_log($sql,0);
   		$rows = $db->query($sql);
 		$msqidorder = array();
-		foreach($rows as $row)
-			foreach($row as $key=>$val)
+		foreach($rows as $row) {
+			foreach($row as $key=>$val) {
 				if($key == 'msqID')
 					$msqidorder[] = $val;
-		return $msqidorder;
+				if($key == 'vnum')
+					$vnumorder[] = $val;
+			}
+		}
+		return array($msqidorder,$vnumorder);
 	}
 	/*====================================================*
 	 ***			get_Number_by_msqID ()				***
 	 *====================================================*/
 	function get_Number_by_msqID( $kinda, $LcID, $LbID, $msqID ) {
 		if(($msqID == 0)||($LcID == 0)||($LbID == 0))
-			return -1;
+			return NULL;
 
 		$db = Loader::db();
 		$sql = "SELECT rID FROM btTomoacLister WHERE LcID=".$LcID." AND LbID=".$LbID;
 		//error_log($sql,0);
   		$rID = $db->GetOne($sql);
 		if($rID == '')
-			return -1;
+			return NULL;
 
 		$sql = "SELECT vnum FROM btTomoacListerItems WHERE rID=$rID AND msqID=$msqID AND kinda=$kinda";
 		//error_log($sql,0);
   		$num = $db->GetOne($sql);
 		if($num == '')
-			return -1;
+			return NULL;
 		return $num;
 	}
 	/*====================================================*
@@ -184,14 +179,14 @@ class ListerTomoacBlockController extends BlockController {
 	 *====================================================*/
 	function get_String_by_msqID( $kinda, $LcID, $LbID, $msqID ) {
 		if(($msqID == 0)||($LcID == 0)||($LbID == 0))
-			return '';
+			return NULL;
 
 		$db = Loader::db();
 		$sql = "SELECT rID FROM btTomoacLister WHERE LcID=".$LcID." AND LbID=".$LbID;
 		//error_log($sql,0);
   		$rID = $db->GetOne($sql);
 		if($rID == '')
-			return '';
+			return NULL;
 
 		$sql = "SELECT vstr FROM btTomoacListerItems WHERE rID=$rID AND msqID=$msqID AND kinda=$kinda";
 		//error_log($sql,0);
@@ -440,7 +435,7 @@ class ListerTomoacBlockController extends BlockController {
 
 	/*============Output Record Table ( VIEW & LIST) ==============*/
 
-			$msqidorder = $this->get_msqID_list( COLS_ORDER, $formcid, $nowcid, $nowbid );
+			list($msqidorder, $vnumorder) = $this->get_msqID_list( COLS_ORDER, $formcid, $nowcid, $nowbid );
 //			$formcid = $this->get_cID( $formcid, $nowcid, $nowbid );
 
 			if($_POST['function'] == 'view') {
@@ -573,19 +568,26 @@ class ListerTomoacBlockController extends BlockController {
 
 				// 表示順をソートするため、順番(sorder)を参照して、サブクエリーする
 				$i = 0;
-				$sorder = $this->get_msqID_list( ROWS_ORDER, $formcid, $nowcid, $nowbid);
+				list($sorder, $vorder) = $this->get_msqID_list( ROWS_ORDER, $formcid, $nowcid, $nowbid);
 				if(!is_null($sorder)&&(count($sorder) > 0)) {
 					$sql = 'SELECT * FROM ('.$sql.') AS temp ORDER BY ';
+					$sql2 = '';
 					foreach($msqidar as $m) {
+						//error_log('sorder='.$sorder[$i].' vorder='.$vorder[$i],0);
 						if($sorder[$i] == 0)
 							break;
-						if($i != 0)
+						if($sql2 != '')
 							$sql2 .= ',';
-						if($sorder[$i] > 0)
-							$sql2 .= 'answer'.$sorder[$i].',answerLong'.$sorder[$i];
+						if(($sorder[$i] > 0)&&($vorder[$i] != 0)) {
+							//error_log('sorder='.$sorder[$i].' vorder='.$vorder[$i],0);
+							if($vorder[$i] < 0)
+								$sql2 .= 'answer'.$sorder[$i].' DESC,answerLong'.$sorder[$i].' DESC';
+							else
+								$sql2 .= 'answer'.$sorder[$i].' ASC,answerLong'.$sorder[$i].' ASC';
+						}
 						$i++;
 					}
-					//error_log($sql2,0);
+					error_log($sql2,0);
 					$sql .= $sql2;
 				}
 				// 表示するページのみ抽出
@@ -602,20 +604,18 @@ class ListerTomoacBlockController extends BlockController {
 					foreach($row5 as $key=>$val) {
 						if($key == 'msqID') {
 							if(is_null($msqidorder))
-								$u = -1;	// no output
+								$u = NULL;	// no output
 							else if(($u = array_search($val, $msqidorder)) === FALSE)
-								$u = -1;	// no output
+								$u = NULL;	// no output
 						} else if($key == 'inputType') {
 							$inputType = $val;
 						} else if($key == 'question') {
-							if($inputType == 'jname') {
-								$qas[$u] = $val;
-//								$fmt = $this->get_String_by_msqID( ITEM_FORMAT, $nowcid, $nowbid, $msqid );
-//								$tar = explode('&&',$fmt);
-//								for($i=0; $i<count($tar); $i++)
-//									$qas[$u] .= '<td></td>';
-							} else
-								$qas[$u] = $val;
+							if(!is_null($u)) {
+								if($inputType == 'jname')
+									$qas[$u] = $val;
+								else
+									$qas[$u] = $val;
+							}
 						}
 					}
 				}
@@ -649,9 +649,9 @@ class ListerTomoacBlockController extends BlockController {
 
 							$m = $msqidar[$i];
 							if(is_null($msqidorder))
-								$u = -1;	// no output
+								$u = NULL;	// no output
 							else if(($u = array_search($m, $msqidorder)) === FALSE)
-								$u = -1;	// no output
+								$u = NULL;	// no output
 							if($key == 'asID'.$m) {
 								if($i == 0)
 									$asid = $val;
@@ -670,7 +670,7 @@ class ListerTomoacBlockController extends BlockController {
 									$html .= $this->formopen_tag( $asid, $formcid, $debug );
 									$first++;
 								}
-								if($u >= 0) {
+								if(!is_null($u)) {
 									$fmt = $this->get_String_by_msqID( ITEM_FORMAT, $nowcid, $nowbid, $msqid );
 									$htmlar[$u] .= $this->hidden_tag( $inputtype, $fmt, $vals, $msqid, $debug );
 								}
@@ -789,9 +789,6 @@ class ListerTomoacBlockController extends BlockController {
 	 *====================================================*/
 	function hidden_tag( $inputtype, $fmt, $vals, $msqid, $debug=0 ) {
 
-		if($inputtype == 'field') {
-			error_log($fmt,0);
-		}
 		if($inputtype == 'jname') {
 			$valar = explode('&&', $vals);
 			$vals = sprintf($fmt, $valar[0],$valar[1],$valar[2],$valar[3]);
