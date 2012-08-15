@@ -822,13 +822,20 @@ class ListerTomoacBlockController extends BlockController {
 	 ***                	Page Control 				***
 	 *====================================================*/
 	function numberwithcomma($val) {
-		if(strlen($val) > 9)
-			return substr($val,-12,3).','.substr($val,-9,3).','.substr($val,-6,3).','.substr($val,-3);
-		if(strlen($val) > 6)
-			return substr($val,-9,3).','.substr($val,-6,3).','.substr($val,-3);
-		if(strlen($val) > 3)
-			return substr($val,-6,3).','.substr($val,-3);
+		if(strlen($val) > 9) {
+			$c = strlen($val) - 9;
+			return substr($val,0-strlen($val),$c).','.substr($val,-9,3).','.substr($val,-6,3).','.substr($val,-3);
+		}
+		if(strlen($val) > 6) {
+			$c = strlen($val) - 6;
+			return substr($val,0-strlen($val),$c).','.substr($val,-6,3).','.substr($val,-3);
+		}
+		if(strlen($val) > 3) {
+			$c = strlen($val) - 3;
+			return substr($val,0-strlen($val),$c).','.substr($val,-3);
+		}
 		return $val;
+	}
 	}
 }
 /*====================================================*
