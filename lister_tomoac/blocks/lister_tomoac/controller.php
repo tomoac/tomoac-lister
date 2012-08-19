@@ -336,6 +336,9 @@ class ListerTomoacBlockController extends BlockController {
 
 		$debug = 0;	// debug
 
+		if(is_null($_POST['beginp']))
+			$_POST['beginp'] = $_GET['listbeginp'];
+
 		$db = Loader::db();
 
 		$lc = Page::getByID($linkID);
@@ -512,7 +515,7 @@ class ListerTomoacBlockController extends BlockController {
 				// ボタン表示
 //				$html .= '</tr>';
 				$html .= '<tr align="center">';
-				$html .= $this->button_tag($cid, $bid, $asid, $editFlag, $_POST['surveyName'], 1, $debug);
+				$html .= $this->button_tag($cid, $bid, $asid, $editFlag, $_POST['surveyName'], 1, NULL, $debug);
 				$html .= '<td></td>';
 				$html .= '</tr>';
 			}
@@ -564,7 +567,12 @@ class ListerTomoacBlockController extends BlockController {
 				$pc = new PageControler;
 				$listtotal = $db->getOne('SELECT count(*) FROM ('.$sql.') as listtotal');
 				$pc->PageControl_Init( $listtotal, $pplines );
+
+				error_log('1-listbeginp='.$_POST['listbeginp'],0);
+
 				list( $listbeginp, $listendp, $listcount ) = $pc->GetPageControl();
+
+				error_log('2-listbeginp='.$listbeginp,0);
 
 				// 表示順をソートするため、順番(sorder)を参照して、サブクエリーする
 				$i = 0;
@@ -587,7 +595,7 @@ class ListerTomoacBlockController extends BlockController {
 						}
 						$i++;
 					}
-					error_log($sql2,0);
+					//error_log($sql2,0);
 					$sql .= $sql2;
 				}
 				// 表示するページのみ抽出
@@ -695,7 +703,7 @@ class ListerTomoacBlockController extends BlockController {
 						for($a=0; $a<count($msqidorder); $a++)
 							$html .= $htmlar[$a];
 					$html .= $html2; $html2 = '';
-					$html .= $this->button_tag($cid, $bid, $asid, $editFlag, $_POST['surveyName'], 0, $debug);
+					$html .= $this->button_tag($cid, $bid, $asid, $editFlag, $_POST['surveyName'], 0, $pc, $debug);
 					$html .= '</tr>';
 
 					$dc++;
@@ -732,18 +740,23 @@ class ListerTomoacBlockController extends BlockController {
 	/*====================================================*
 	 ***                make button tag (2)				***
 	 *====================================================*/
-	function button_tag( $cid, $bid, $asid, $editFlag, $surveyname, $bn, $debug=0 ) {
+	function button_tag( $cid, $bid, $asid, $editFlag, $surveyname, $bn, $pagectrl=NULL, $debug=0 ) {
 //		error_log('/cID='.$cid.'/bID='.$bid.'/asID='.$asid.'/formcID='.$formcid.'/surneyName='.$surveyname.'/bn='.$bn.'/debug='.$debug,0);
+
+		list( $listbeginp, $listendp, $listcount ) = $pagectrl->GetPageControl();
 
 		$html .= '<td>';
 
 		// 編集ボタン
 		if($editFlag != 0) {
-			$html .= '<input type="hidden" name="function" value="edit">';
-			$html .= '<input type="hidden" name="lister" value="'.$cid.'">';
-			$html .= '<input type="hidden" name="asID" value="'.$asid.'">';
-			$html .= '<input type="hidden" name="bID" value="'.$bid.'">';
+			$html .= '<input type="hidden" name="function" value="edit" />';
+			$html .= '<input type="hidden" name="lister" value="'.$cid.'" />';
+			$html .= '<input type="hidden" name="asID" value="'.$asid.'" />';
+			$html .= '<input type="hidden" name="bID" value="'.$bid.'" />';
 			$html .= '<input type="hidden" name="surveyName" value="'.$surveyname.'">';
+			$html .= '<input type="hidden" name="listbeginp" value="'.$listbeginp.'" />';
+			$html .= '<input type="hidden" name="listendp" value="'.$listendp.'" />';
+			$html .= '<input type="hidden" name="listcount" value="'.$listcount.'" />';
 			$html .= '<a onclick="document.form'.$asid.'.submit();">'.t('Edit').'</a>';
 			$html .= '&nbsp;';
 			$html .= '<a onclick="if(confirm('."'".t('Delete OK?')."'".') == true) document.form'.$asid.'del.submit();">'.t('Delete').'</a>';
@@ -769,6 +782,9 @@ class ListerTomoacBlockController extends BlockController {
 			$html .= '<input type="hidden" name="asID" value="'.$asid.'">';
 			$html .= '<input type="hidden" name="bID" value="'.$bid.'">';
 			$html .= '<input type="hidden" name="surveyName" value="'.$surveyname.'">';
+			$html .= '<input type="hidden" name="listbeginp" value="'.$listbeginp.'" />';
+			$html .= '<input type="hidden" name="listendp" value="'.$listendp.'" />';
+			$html .= '<input type="hidden" name="listcount" value="'.$listcount.'" />';
 			$html .= '</form>';
 		}
 		// 表示ボタン
@@ -780,6 +796,9 @@ class ListerTomoacBlockController extends BlockController {
 			$html .= '<input type="hidden" name="asID" value="'.$asid.'">';
 			$html .= '<input type="hidden" name="bID" value="'.$bid.'">';
 			$html .= '<input type="hidden" name="surveyName" value="'.$_POST['surveyName'].'">';
+			$html .= '<input type="hidden" name="listbeginp" value="'.$listbeginp.'" />';
+			$html .= '<input type="hidden" name="listendp" value="'.$listendp.'" />';
+			$html .= '<input type="hidden" name="listcount" value="'.$listcount.'" />';
 			$html .= '</form>'."\n";
 		}
 		return $html;
@@ -792,11 +811,12 @@ class ListerTomoacBlockController extends BlockController {
 		if($inputtype == 'jname') {
 			$valar = explode('&&', $vals);
 			$vals = sprintf($fmt, $valar[0],$valar[1],$valar[2],$valar[3]);
-			$html .= '<td>'.$vals.'</td>';
+			$html .= '<td>'.$vals;
 			$html .= '<input type="hidden" name="Question'.$msqid.'name1" value="'.$valar[0].'">';
 			$html .= '<input type="hidden" name="Question'.$msqid.'name2" value="'.$valar[1].'">';
 			$html .= '<input type="hidden" name="Question'.$msqid.'ruby1" value="'.$valar[2].'">';
 			$html .= '<input type="hidden" name="Question'.$msqid.'ruby2" value="'.$valar[3].'">';
+			$html .= '</td>';
 		}
 		else if($inputtype == 'postno') {
 			$valar = explode('&&', $vals);
@@ -806,36 +826,18 @@ class ListerTomoacBlockController extends BlockController {
 			$html .= '<input type="hidden" name="Question'.$msqid.'a" value="'.$valar[1].'">';
 			$html .= '<input type="hidden" name="Question'.$msqid.'b" value="'.$valar[2].'">';
 			$html .= '<input type="hidden" name="Question'.$msqid.'c" value="'.$valar[3].'">';
+			$html .= '</td>';
 		}
 		else {
 			$html .= '<td>';
 			if($fmt == '%k')
-				$html .= $this->numberwithcomma($vals);
+				$html .= number_format($vals);
 			else
 				$html .= sprintf($fmt, $vals);
-			$html .= '</td>';
 			$html .= '<input type="hidden" name="Question'.$msqid.'" value="'.$vals.'">';
+			$html .= '</td>';
 		}
 		return $html;
-	}
-	/*====================================================*
-	 ***                	Page Control 				***
-	 *====================================================*/
-	function numberwithcomma($val) {
-		if(strlen($val) > 9) {
-			$c = strlen($val) - 9;
-			return substr($val,0-strlen($val),$c).','.substr($val,-9,3).','.substr($val,-6,3).','.substr($val,-3);
-		}
-		if(strlen($val) > 6) {
-			$c = strlen($val) - 6;
-			return substr($val,0-strlen($val),$c).','.substr($val,-6,3).','.substr($val,-3);
-		}
-		if(strlen($val) > 3) {
-			$c = strlen($val) - 3;
-			return substr($val,0-strlen($val),$c).','.substr($val,-3);
-		}
-		return $val;
-	}
 	}
 }
 /*====================================================*
